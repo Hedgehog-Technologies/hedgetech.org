@@ -1,0 +1,47 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { gameById } from '../../lib/site';
+import { getProjects } from '../../lib/projects';
+import { fmtDate } from '../../lib/github';
+
+export async function getStaticPaths() {
+  return (await getProjects()).map((p) => ({ params: { slug: p.slug }, props: { project: p } }));
+}
+const { project } = Astro.props;
+const { data, repo, release, entry } = project;
+const game = gameById(data.game);
+const { Content } = await render(entry);
+---
+<Base title={data.title} description={data.summary}>
+  <div class="container">
+    <p class="crumbs"><a href="/">Home</a> / <a href={`/games/${data.game}/`}>{game?.name}</a> / {data.title}</p>
+    <h1>{data.title}</h1>
+    <p class="lead">{data.summary}</p>
+    <div class="layout">
+      <article class="prose"><Content /></article>
+      <aside class="sidebar">
+        <div class="panel">
+          <h2>Project info</h2>
+          <dl>
+            <dt>Game</dt><dd>{game?.name}</dd>
+            <dt>Type</dt><dd style="text-transform:capitalize">{data.kind}</dd>
+            {repo?.language && <><dt>Language</dt><dd>{repo.language}</dd></>}
+            {release && <><dt>Latest</dt><dd>{release.tag_name}</dd><dt>Released</dt><dd>{fmtDate(release.published_at)}</dd></>}
+            {repo && <><dt>Updated</dt><dd>{fmtDate(repo.pushed_at)}</dd><dt>Stars</dt><dd>★ {repo.stargazers_count}</dd><dt>Issues</dt><dd>{repo.open_issues_count} open</dd></>}
+          </dl>
+          {release && <a class="btn" href={release.html_url} rel="noopener">Download {release.tag_name}</a>}
+          {repo && <a class="btn ghost" href={repo.html_url} rel="noopener">View on GitHub</a>}
+          {repo && <a class="btn ghost" href={`${repo.html_url}/issues`} rel="noopener">Report an issue</a>}
+          {data.links.map((l) => <a class="btn ghost" href={l.url} rel="noopener">{l.label}</a>)}
+        </div>
+        {release?.body && (
+          <div class="panel">
+            <h2>Latest release notes</h2>
+            <div class="release-notes">{release.body}</div>
+          </div>
+        )}
+      </aside>
+    </div>
+  </div>
+</Base>

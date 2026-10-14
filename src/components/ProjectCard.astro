@@ -1,0 +1,14 @@
+---
+import { gameById } from '../lib/site';
+interface Props { slug: string; title: string; summary: string; game: string; kind: string; stars?: number; version?: string }
+const { slug, title, summary, game, kind, stars, version } = Astro.props;
+---
+<a class="card" href={`/projects/${slug}/`}>
+  <div class="meta"><span class="badge">{gameById(game)?.name}</span><span class="badge alt">{kind}</span></div>
+  <h3>{title}</h3>
+  <p>{summary}</p>
+  <div class="stats">
+    {version && <span>{version}</span>}
+    {stars !== undefined && stars > 0 && <span>★ {stars}</span>}
+  </div>
+</a>
